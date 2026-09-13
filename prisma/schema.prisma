@@ -1,0 +1,127 @@
+// This is your Prisma schema file for Neon PostgreSQL
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ItemStatus {
+  PENDING
+  COMPLETED
+  OVERDUE
+  REPEATED_UNRESOLVED
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  createdAt DateTime  @default(now())
+  meetings  Meeting[]
+
+  @@map("users")
+}
+
+model Meeting {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title           String
+  meetingDate     DateTime           @default(now())
+  transcriptText  String             @db.Text
+  summary         String             @db.Text
+  commitments     Commitment[]       @relation("MeetingCommitments")
+  referencedIn    Commitment[]       @relation("LastMentionedMeeting")
+  decisions       Decision[]
+  actionItems     ActionItem[]
+  unresolvedIssues UnresolvedIssue[]
+  transcriptChunks TranscriptChunk[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([meetingDate])
+  @@map("meetings")
+}
+
+model Commitment {
+  id                     String      @id @default(cuid())
+  meetingId              String
+  meeting                Meeting     @relation("MeetingCommitments", fields: [meetingId], references: [id], onDelete: Cascade)
+  person                 String
+  description            String      @db.Text
+  deadline               DateTime?
+  status                 ItemStatus  @default(PENDING)
+  lastMentionedMeetingId String?
+  lastMentionedMeeting   Meeting?    @relation("LastMentionedMeeting", fields: [lastMentionedMeetingId], references: [id], onDelete: SetNull)
+  confidence             Float?      @default(1.0)
+  statusHistory          String?     @db.Text // JSON string of audit trail across meetings
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  @@index([meetingId])
+  @@index([lastMentionedMeetingId])
+  @@index([status])
+  @@index([person])
+  @@map("commitments")
+}
+
+model Decision {
+  id          String   @id @default(cuid())
+  meetingId   String
+  meeting     Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([meetingId])
+  @@map("decisions")
+}
+
+model ActionItem {
+  id          String     @id @default(cuid())
+  meetingId   String
+  meeting     Meeting    @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  person      String
+  description String     @db.Text
+  deadline    DateTime?
+  status      ItemStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([meetingId])
+  @@index([person])
+  @@index([status])
+  @@map("action_items")
+}
+
+model UnresolvedIssue {
+  id            String     @id @default(cuid())
+  meetingId     String
+  meeting       Meeting    @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  description   String     @db.Text
+  timesRepeated Int        @default(1)
+  status        ItemStatus @default(PENDING)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([meetingId])
+  @@index([status])
+  @@map("unresolved_issues")
+}
+
+model TranscriptChunk {
+  id         String   @id @default(cuid())
+  meetingId  String
+  meeting    Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  chunkText  String   @db.Text
+  chunkIndex Int
+  createdAt  DateTime @default(now())
+
+  @@index([meetingId])
+  @@map("transcript_chunks")
+}

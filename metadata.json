@@ -1,0 +1,6 @@
+{
+  "name": "MeetMind AI",
+  "description": "AI Meeting Accountability & Intelligence System that remembers information across multiple meetings and intelligently tracks commitments, decisions, deadlines, and repeated issues.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
