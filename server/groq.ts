@@ -355,15 +355,31 @@ export async function answerMeetingQuestion(
   question: string,
   contextItems: Array<{
     meetingTitle: string;
-    meetingDate: string;
+    meetingDate: string | Date | any;
     type: string;
     text: string;
   }>
 ): Promise<{ answer: string; confidence: number }> {
   const contextStr = contextItems
     .map(
-      (c, idx) =>
-        `[Source ${idx + 1}] Meeting: "${c.meetingTitle}" (${c.meetingDate.split('T')[0]}) | Type: ${c.type}\nContent: ${c.text}`
+      (c, idx) => {
+        let dateStr = 'Recent';
+        const rawDate: any = c.meetingDate;
+        if (rawDate) {
+          if (typeof rawDate === 'string') {
+            dateStr = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate;
+          } else if (rawDate instanceof Date) {
+            dateStr = rawDate.toISOString().split('T')[0];
+          } else {
+            try {
+              dateStr = new Date(rawDate).toISOString().split('T')[0];
+            } catch {
+              dateStr = String(rawDate);
+            }
+          }
+        }
+        return `[Source ${idx + 1}] Meeting: "${c.meetingTitle}" (${dateStr}) | Type: ${c.type}\nContent: ${c.text}`;
+      }
     )
     .join('\n\n');
 

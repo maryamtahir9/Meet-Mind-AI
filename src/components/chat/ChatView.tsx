@@ -129,10 +129,20 @@ export const ChatView: React.FC<ChatViewProps> = ({ onSelectMeeting }) => {
         setShowSourcesFor((prev) => ({ ...prev, [aiMsg.id]: true }));
       }
     } catch (err: any) {
+      const isVercelOrEndpointError =
+        err.message?.includes('404') ||
+        err.message?.includes('HTML') ||
+        err.message?.includes('Vercel') ||
+        err.message?.includes('endpoint');
+
+      const tipText = isVercelOrEndpointError
+        ? `\n\n> **Vercel Deployment Checklist:**\n> - Ensure \`vercel.json\` and \`api/index.ts\` are committed to your git repository.\n> - Verify that \`GROQ_API_KEY\` and \`DATABASE_URL\` are configured in **Vercel Dashboard > Project Settings > Environment Variables**.\n> - If your backend runs on a separate server, add \`VITE_API_URL=https://your-backend-host.com\` to your Vercel Environment Variables.`
+        : '';
+
       const errorMsg: RAGMessage = {
         id: `err-${Date.now()}`,
         sender: 'ai',
-        text: `### Memory Query Notice\n\nUnable to retrieve cross-meeting context: **${err.message}**.\nPlease verify the backend service connection or try rephrasing your question.`,
+        text: `### Memory Query Notice\n\n${err.message}${tipText}`,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMsg]);

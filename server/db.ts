@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { neon } from '@neondatabase/serverless';
 import {
   User,
@@ -14,7 +15,15 @@ import {
 } from './types';
 
 // Storage file location for local demo mode / fallback
-const DATA_DIR = path.join(process.cwd(), 'data');
+// In serverless environments like Vercel or AWS Lambda, process.cwd() is read-only.
+// We use os.tmpdir() to ensure safe write permissions.
+const isServerless = Boolean(
+  process.env.VERCEL ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.LAMBDA_TASK_ROOT ||
+  process.env.NODE_ENV === 'production' && !fs.existsSync(path.join(process.cwd(), 'data'))
+);
+const DATA_DIR = isServerless ? path.join(os.tmpdir(), 'meetmind_data') : path.join(process.cwd(), 'data');
 const DATA_FILE = path.join(DATA_DIR, 'meetmind_store.json');
 
 interface DatabaseStore {
@@ -446,16 +455,27 @@ class DatabaseService {
       const issues = await this.sqlClient`SELECT * FROM unresolved_issues`;
       const users = await this.sqlClient`SELECT * FROM users`;
 
+function toIsoString(val: any, fallback?: string): string {
+  if (!val) return fallback || new Date().toISOString();
+  if (val instanceof Date) return val.toISOString();
+  if (typeof val === 'string') return val;
+  try {
+    return new Date(val).toISOString();
+  } catch {
+    return fallback || new Date().toISOString();
+  }
+}
+
       if (meetings && meetings.length > 0) {
         this.store.meetings = meetings.map((m: any) => ({
           id: m.id,
           userId: m.user_id,
           title: m.title,
-          meetingDate: m.meeting_date,
+          meetingDate: toIsoString(m.meeting_date),
           transcriptText: m.transcript_text,
           summary: m.summary,
-          createdAt: m.created_at,
-          updatedAt: m.updated_at,
+          createdAt: toIsoString(m.created_at),
+          updatedAt: toIsoString(m.updated_at),
         }));
       }
 
@@ -464,17 +484,17 @@ class DatabaseService {
           id: c.id,
           meetingId: c.meeting_id,
           meetingTitle: this.store.meetings.find(m => m.id === c.meeting_id)?.title || 'Meeting',
-          meetingDate: this.store.meetings.find(m => m.id === c.meeting_id)?.meetingDate || new Date().toISOString(),
+          meetingDate: toIsoString(this.store.meetings.find(m => m.id === c.meeting_id)?.meetingDate, new Date().toISOString()),
           person: c.person,
           description: c.description,
-          deadline: c.deadline,
+          deadline: c.deadline ? toIsoString(c.deadline) : null,
           status: c.status as ItemStatus,
           lastMentionedMeetingId: c.last_mentioned_meeting_id,
           lastMentionedMeetingTitle: this.store.meetings.find(m => m.id === c.last_mentioned_meeting_id)?.title,
           confidence: c.confidence || 0.9,
           statusHistory: typeof c.status_history === 'string' ? JSON.parse(c.status_history) : (c.status_history || []),
-          createdAt: c.created_at,
-          updatedAt: c.updated_at,
+          createdAt: toIsoString(c.created_at),
+          updatedAt: toIsoString(c.updated_at),
         }));
       }
 
@@ -483,7 +503,7 @@ class DatabaseService {
           id: d.id,
           meetingId: d.meeting_id,
           description: d.description,
-          createdAt: d.created_at,
+          createdAt: toIsoString(d.created_at),
         }));
       }
 
@@ -493,10 +513,10 @@ class DatabaseService {
           meetingId: a.meeting_id,
           person: a.person,
           description: a.description,
-          deadline: a.deadline,
+          deadline: a.deadline ? toIsoString(a.deadline) : null,
           status: a.status as ItemStatus,
-          createdAt: a.created_at,
-          updatedAt: a.updated_at,
+          createdAt: toIsoString(a.created_at),
+          updatedAt: toIsoString(a.updated_at),
         }));
       }
 
@@ -508,8 +528,8 @@ class DatabaseService {
           timesRepeated: i.times_repeated,
           status: i.status as ItemStatus,
           relatedMeetingIds: typeof i.related_meeting_ids === 'string' ? JSON.parse(i.related_meeting_ids) : (i.related_meeting_ids || []),
-          createdAt: i.created_at,
-          updatedAt: i.updated_at,
+          createdAt: toIsoString(i.created_at),
+          updatedAt: toIsoString(i.updated_at),
         }));
       }
 
@@ -518,7 +538,7 @@ class DatabaseService {
           id: u.id,
           email: u.email,
           name: u.name,
-          createdAt: u.created_at,
+          createdAt: toIsoString(u.created_at),
         }));
       }
 
@@ -603,7 +623,7 @@ class DatabaseService {
       }
       fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), 'utf-8');
     } catch (err) {
-      console.error('[DB] Failed to persist data file:', err);
+      console.warn('[DB] Notice: Fallback data file write skipped (normal in read-only serverless):', err);
     }
   }
 

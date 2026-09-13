@@ -93,6 +93,17 @@ export async function answerQuestionWithRAG(userId: string, question: string): P
     text: string;
   }
 
+function ensureStringDate(val: any): string {
+  if (!val) return new Date().toISOString();
+  if (val instanceof Date) return val.toISOString();
+  if (typeof val === 'string') return val;
+  try {
+    return new Date(val).toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
   const candidates: ScoredItem[] = [];
 
   // Score commitments
@@ -104,7 +115,7 @@ export async function answerQuestionWithRAG(userId: string, question: string): P
         score: score + 1.0, // High priority for structured commitments
         meetingId: c.meetingId,
         meetingTitle: c.meetingTitle || 'Meeting',
-        meetingDate: c.meetingDate || c.createdAt,
+        meetingDate: ensureStringDate(c.meetingDate || c.createdAt),
         type: 'commitment',
         text,
       });
@@ -120,7 +131,7 @@ export async function answerQuestionWithRAG(userId: string, question: string): P
         score,
         meetingId: d.meetingId,
         meetingTitle: d.meetingTitle || 'Meeting',
-        meetingDate: d.createdAt,
+        meetingDate: ensureStringDate(d.createdAt),
         type: 'decision',
         text,
       });
@@ -136,7 +147,7 @@ export async function answerQuestionWithRAG(userId: string, question: string): P
         score: score + 1.5,
         meetingId: i.meetingId,
         meetingTitle: i.meetingTitle || 'Meeting',
-        meetingDate: i.createdAt,
+        meetingDate: ensureStringDate(i.createdAt),
         type: 'issue',
         text,
       });
@@ -151,7 +162,7 @@ export async function answerQuestionWithRAG(userId: string, question: string): P
         score,
         meetingId: ch.meetingId,
         meetingTitle: ch.meetingTitle || 'Meeting',
-        meetingDate: ch.createdAt,
+        meetingDate: ensureStringDate(ch.createdAt),
         type: 'transcript',
         text: ch.chunkText,
       });

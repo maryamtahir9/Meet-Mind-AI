@@ -1,0 +1,259 @@
+{
+  "users": [
+    {
+      "id": "usr_demo_maryam",
+      "email": "maryam@meetmind.ai",
+      "name": "Maryam Tahir",
+      "createdAt": "2026-09-01T09:00:00.000Z"
+    }
+  ],
+  "meetings": [
+    {
+      "id": "mtg_03",
+      "userId": "usr_demo_maryam",
+      "title": "Sprint 42 Review & Production Deployment",
+      "meetingDate": "2026-09-08T16:00:00.000Z",
+      "transcriptText": "Maryam: Let's review our sprint wrap-up. Ali, what is the final state of the core API?\nAli: I am happy to report that the API is now fully completed, tested, and deployed to staging. Neon pooling issues are resolved.\nMaryam: That is fantastic news! Ali's API commitment is officially completed.\nDavid: What about the customer login failures?\nDavid: The login issue remains unresolved. Users are still experiencing premature token logouts after 15 minutes. This is the third meeting in a row we have discussed this.\nAli: I will personally take over the session token timeout investigation tomorrow morning.\nMaryam: We decided to deploy the staging release to production tomorrow at 10 AM, with emergency monitoring on the auth service.",
+      "summary": "Final Sprint 42 review. Ali successfully completed and deployed the core API after resolving database pooling issues. However, the customer login authentication bug remains unresolved for the third consecutive meeting and was escalated. Deployment scheduled for tomorrow 10 AM.",
+      "createdAt": "2026-09-08T17:00:00.000Z",
+      "updatedAt": "2026-09-08T17:00:00.000Z"
+    },
+    {
+      "id": "mtg_02",
+      "userId": "usr_demo_maryam",
+      "title": "Mid-Sprint 42 Checkpoint & Blockers Sync",
+      "meetingDate": "2026-09-05T14:30:00.000Z",
+      "transcriptText": "Maryam: Welcome everyone. Ali, how are we looking with the core API deliverable that was due Friday?\nAli: Unfortunately, the API is still not completed. We ran into database lock contention with Neon connection pooling. I am working through the connection retry logic today.\nMaryam: Understood, but this is now pushing back integration tests. What about the login issue?\nDavid: Users still cannot log in consistently. The authentication bug remains unresolved and customers are contacting support.\nSarah: I have finished 80% of the timeline UI and will have the PR up by tomorrow.\nAli: I will prioritize the Neon connection pool bugfix and aim to wrap the API by Sunday evening.",
+      "summary": "Mid-sprint checkpoint addressing delays. Ali reported that the core API is not completed due to Neon connection pooling contention, shifting it to overdue. The login authentication bug remains unresolved and active. Sarah made solid progress on the timeline UI.",
+      "createdAt": "2026-09-05T15:30:00.000Z",
+      "updatedAt": "2026-09-05T15:30:00.000Z"
+    },
+    {
+      "id": "mtg_01",
+      "userId": "usr_demo_maryam",
+      "title": "Sprint 42 Planning & Architecture Kickoff",
+      "meetingDate": "2026-09-02T10:00:00.000Z",
+      "transcriptText": "Maryam: Good morning team. Let's align on our deliverables for Sprint 42. Ali, what is the status of the OAuth and core REST API endpoints?\nAli: I will complete the API by Friday. I'll make sure all user validation and rate limiting are properly structured.\nSarah: Great. On the frontend, I will build the accountability timeline UI by next Tuesday.\nDavid: We also noticed an authentication bug where session tokens expire prematurely during login.\nAli: Yes, the auth bug is blocking some users intermittently.\nMaryam: Okay, we decided to adopt JWT with rotating refresh tokens for the new auth flow. Let's make sure the API is prioritized.",
+      "summary": "Sprint 42 kickoff focusing on core REST API deliverables and authentication stability. Team agreed to migrate to JWT rotating refresh tokens. Ali committed to delivering the core API by Friday, while Sarah will complete the timeline UI. A recurring token expiration bug was flagged.",
+      "createdAt": "2026-09-02T11:00:00.000Z",
+      "updatedAt": "2026-09-02T11:00:00.000Z"
+    }
+  ],
+  "commitments": [
+    {
+      "id": "com_01",
+      "meetingId": "mtg_01",
+      "meetingTitle": "Sprint 42 Planning & Architecture Kickoff",
+      "meetingDate": "2026-09-02T10:00:00.000Z",
+      "person": "Ali",
+      "description": "Complete the REST and OAuth API endpoints with user validation and rate limiting",
+      "deadline": "2026-09-05T23:59:59.000Z",
+      "status": "COMPLETED",
+      "lastMentionedMeetingId": "mtg_03",
+      "lastMentionedMeetingTitle": "Sprint 42 Review & Production Deployment",
+      "confidence": 0.98,
+      "statusHistory": [
+        {
+          "reason": "Initial commitment created during sprint kickoff.",
+          "meetingId": "mtg_01",
+          "newStatus": "PENDING",
+          "timestamp": "2026-09-02T11:00:00.000Z",
+          "confidence": 1,
+          "meetingDate": "2026-09-02T10:00:00.000Z",
+          "meetingTitle": "Sprint 42 Planning & Architecture Kickoff",
+          "previousStatus": "PENDING"
+        },
+        {
+          "reason": "Ali stated: \"The API is still not completed\" due to Neon connection pooling contention.",
+          "meetingId": "mtg_02",
+          "newStatus": "OVERDUE",
+          "timestamp": "2026-09-05T15:30:00.000Z",
+          "confidence": 0.95,
+          "meetingDate": "2026-09-05T14:30:00.000Z",
+          "meetingTitle": "Mid-Sprint 42 Checkpoint & Blockers Sync",
+          "previousStatus": "PENDING"
+        },
+        {
+          "reason": "Ali confirmed: \"The API is now fully completed, tested, and deployed to staging.\"",
+          "meetingId": "mtg_03",
+          "newStatus": "COMPLETED",
+          "timestamp": "2026-09-08T17:00:00.000Z",
+          "confidence": 0.99,
+          "meetingDate": "2026-09-08T16:00:00.000Z",
+          "meetingTitle": "Sprint 42 Review & Production Deployment",
+          "previousStatus": "OVERDUE"
+        }
+      ],
+      "createdAt": "2026-09-02T11:00:00.000Z",
+      "updatedAt": "2026-09-08T17:00:00.000Z"
+    },
+    {
+      "id": "com_02",
+      "meetingId": "mtg_01",
+      "meetingTitle": "Sprint 42 Planning & Architecture Kickoff",
+      "meetingDate": "2026-09-02T10:00:00.000Z",
+      "person": "Sarah",
+      "description": "Build the accountability timeline UI and submit pull request",
+      "deadline": "2026-09-09T18:00:00.000Z",
+      "status": "PENDING",
+      "lastMentionedMeetingId": "mtg_02",
+      "lastMentionedMeetingTitle": "Mid-Sprint 42 Checkpoint & Blockers Sync",
+      "confidence": 0.92,
+      "statusHistory": [
+        {
+          "reason": "Commitment initiated for next Tuesday.",
+          "meetingId": "mtg_01",
+          "newStatus": "PENDING",
+          "timestamp": "2026-09-02T11:00:00.000Z",
+          "confidence": 1,
+          "meetingDate": "2026-09-02T10:00:00.000Z",
+          "meetingTitle": "Sprint 42 Planning & Architecture Kickoff",
+          "previousStatus": "PENDING"
+        },
+        {
+          "reason": "Sarah reported 80% progress; still pending ahead of target deadline.",
+          "meetingId": "mtg_02",
+          "newStatus": "PENDING",
+          "timestamp": "2026-09-05T15:30:00.000Z",
+          "confidence": 0.94,
+          "meetingDate": "2026-09-05T14:30:00.000Z",
+          "meetingTitle": "Mid-Sprint 42 Checkpoint & Blockers Sync",
+          "previousStatus": "PENDING"
+        }
+      ],
+      "createdAt": "2026-09-02T11:00:00.000Z",
+      "updatedAt": "2026-09-05T15:30:00.000Z"
+    },
+    {
+      "id": "com_03",
+      "meetingId": "mtg_03",
+      "meetingTitle": "Sprint 42 Review & Production Deployment",
+      "meetingDate": "2026-09-08T16:00:00.000Z",
+      "person": "Ali",
+      "description": "Investigate and resolve session token timeout bug in auth service",
+      "deadline": "2026-09-10T12:00:00.000Z",
+      "status": "PENDING",
+      "lastMentionedMeetingId": "mtg_03",
+      "lastMentionedMeetingTitle": "Sprint 42 Review & Production Deployment",
+      "confidence": 0.95,
+      "statusHistory": [
+        {
+          "reason": "New commitment made following recurring login bug escalation.",
+          "meetingId": "mtg_03",
+          "newStatus": "PENDING",
+          "timestamp": "2026-09-08T17:00:00.000Z",
+          "confidence": 1,
+          "meetingDate": "2026-09-08T16:00:00.000Z",
+          "meetingTitle": "Sprint 42 Review & Production Deployment",
+          "previousStatus": "PENDING"
+        }
+      ],
+      "createdAt": "2026-09-08T17:00:00.000Z",
+      "updatedAt": "2026-09-08T17:00:00.000Z"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "dec_01",
+      "meetingId": "mtg_01",
+      "description": "Adopt JWT with rotating refresh tokens for user authentication flow.",
+      "createdAt": "2026-09-02T11:00:00.000Z"
+    },
+    {
+      "id": "dec_02",
+      "meetingId": "mtg_03",
+      "description": "Deploy staging build to production at 10 AM tomorrow with active auth telemetry.",
+      "createdAt": "2026-09-08T17:00:00.000Z"
+    }
+  ],
+  "actionItems": [
+    {
+      "id": "act_01",
+      "meetingId": "mtg_01",
+      "person": "Ali",
+      "description": "Set up rate limiting and validation middleware on core endpoints",
+      "deadline": "2026-09-05T18:00:00.000Z",
+      "status": "COMPLETED",
+      "createdAt": "2026-09-02T11:00:00.000Z",
+      "updatedAt": "2026-09-08T17:00:00.000Z"
+    },
+    {
+      "id": "act_02",
+      "meetingId": "mtg_02",
+      "person": "Ali",
+      "description": "Adjust Neon PostgreSQL connection pooling retry thresholds",
+      "deadline": "2026-09-06T18:00:00.000Z",
+      "status": "COMPLETED",
+      "createdAt": "2026-09-05T15:30:00.000Z",
+      "updatedAt": "2026-09-08T17:00:00.000Z"
+    },
+    {
+      "id": "act_03",
+      "meetingId": "mtg_03",
+      "person": "David",
+      "description": "Set up synthetic health checks for premature logout detection",
+      "deadline": "2026-09-11T17:00:00.000Z",
+      "status": "PENDING",
+      "createdAt": "2026-09-08T17:00:00.000Z",
+      "updatedAt": "2026-09-08T17:00:00.000Z"
+    }
+  ],
+  "unresolvedIssues": [
+    {
+      "id": "iss_01",
+      "meetingId": "mtg_01",
+      "description": "Authentication token premature expiration causing intermittent customer login failures",
+      "timesRepeated": 3,
+      "status": "REPEATED_UNRESOLVED",
+      "relatedMeetingIds": [
+        "mtg_01",
+        "mtg_02",
+        "mtg_03"
+      ],
+      "createdAt": "2026-09-02T11:00:00.000Z",
+      "updatedAt": "2026-09-08T17:00:00.000Z"
+    }
+  ],
+  "transcriptChunks": [
+    {
+      "id": "chk_01",
+      "meetingId": "mtg_01",
+      "meetingTitle": "Sprint 42 Planning & Architecture Kickoff",
+      "chunkIndex": 0,
+      "chunkText": "Maryam: Good morning team. Let us align on deliverables for Sprint 42. Ali, what is the status of the OAuth and core REST API endpoints? Ali: I will complete the API by Friday.",
+      "createdAt": "2026-09-02T11:00:00.000Z"
+    },
+    {
+      "id": "chk_02",
+      "meetingId": "mtg_01",
+      "meetingTitle": "Sprint 42 Planning & Architecture Kickoff",
+      "chunkIndex": 1,
+      "chunkText": "David: We also noticed an authentication bug where session tokens expire prematurely during login. Ali: Yes, the auth bug is blocking some users intermittently.",
+      "createdAt": "2026-09-02T11:00:00.000Z"
+    },
+    {
+      "id": "chk_03",
+      "meetingId": "mtg_02",
+      "meetingTitle": "Mid-Sprint 42 Checkpoint & Blockers Sync",
+      "chunkIndex": 0,
+      "chunkText": "Ali: Unfortunately, the API is still not completed. We ran into database lock contention with Neon connection pooling. David: Users still cannot log in consistently.",
+      "createdAt": "2026-09-05T15:30:00.000Z"
+    },
+    {
+      "id": "chk_04",
+      "meetingId": "mtg_03",
+      "meetingTitle": "Sprint 42 Review & Production Deployment",
+      "chunkIndex": 0,
+      "chunkText": "Ali: I am happy to report that the API is now fully completed, tested, and deployed to staging. Neon pooling issues are resolved.",
+      "createdAt": "2026-09-08T17:00:00.000Z"
+    },
+    {
+      "id": "chk_05",
+      "meetingId": "mtg_03",
+      "meetingTitle": "Sprint 42 Review & Production Deployment",
+      "chunkIndex": 1,
+      "chunkText": "David: The login issue remains unresolved. Users are still experiencing premature token logouts after 15 minutes. This is the third meeting in a row we have discussed this.",
+      "createdAt": "2026-09-08T17:00:00.000Z"
+    }
+  ]
+}
