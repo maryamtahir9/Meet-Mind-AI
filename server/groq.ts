@@ -9,6 +9,17 @@ export const GROQ_CONFIG = {
   baseUrl: 'https://api.groq.com/openai/v1',
 };
 
+export function getGroqApiKey(): string | null {
+  const key =
+    process.env.GROQ_API_KEY ||
+    process.env.GROQ ||
+    process.env.GROQ_KEY ||
+    process.env.GROQKEY ||
+    process.env.VITE_GROQ_API_KEY;
+  if (!key) return null;
+  return key.trim().replace(/^['"]|['"]$/g, '');
+}
+
 // Lazy Gemini client fallback
 let geminiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI | null {
@@ -30,9 +41,9 @@ async function callGroqChat(
   jsonMode = false,
   temperature = 0.2
 ): Promise<string> {
-  const groqApiKey = process.env.GROQ_API_KEY;
+  const groqApiKey = getGroqApiKey();
   if (!groqApiKey) {
-    throw new Error('NO_GROQ_KEY');
+    throw new Error('NO_GROQ_KEY: GROQ_API_KEY environment variable is not configured');
   }
 
   const payload: Record<string, any> = {
@@ -104,7 +115,7 @@ function cleanAndParseJSON<T>(raw: string): T {
  * 1. Transcribe Audio using Groq Whisper API
  */
 export async function transcribeAudio(fileBuffer: Buffer, mimeType: string, filename: string): Promise<string> {
-  const groqApiKey = process.env.GROQ_API_KEY;
+  const groqApiKey = getGroqApiKey();
 
   if (groqApiKey) {
     try {

@@ -133,10 +133,12 @@ export const ChatView: React.FC<ChatViewProps> = ({ onSelectMeeting }) => {
         err.message?.includes('404') ||
         err.message?.includes('HTML') ||
         err.message?.includes('Vercel') ||
-        err.message?.includes('endpoint');
+        err.message?.includes('endpoint') ||
+        err.message?.includes('FUNCTION_INVOCATION_FAILED') ||
+        err.message?.includes('500');
 
       const tipText = isVercelOrEndpointError
-        ? `\n\n> **Vercel Deployment Checklist:**\n> - Ensure \`vercel.json\` and \`api/index.ts\` are committed to your git repository.\n> - Verify that \`GROQ_API_KEY\` and \`DATABASE_URL\` are configured in **Vercel Dashboard > Project Settings > Environment Variables**.\n> - If your backend runs on a separate server, add \`VITE_API_URL=https://your-backend-host.com\` to your Vercel Environment Variables.`
+        ? `\n\n> **Vercel Deployment Checklist:**\n> 1. **Trigger a Redeploy**: In Vercel, adding or editing Environment Variables does **not** update already-running deployments. You must go to **Vercel > Deployments > Click "..." on your latest deployment > Redeploy** (or push a git commit).\n> 2. **Variable Names**: The backend supports:\n>    - \`GROQ_API_KEY\` (or \`GROQ\`)\n>    - \`DATABASE_URL\` (or \`POSTGRES_URL\`)\n>    *(Do not wrap values in quotes)*.\n> 3. **Serverless Pre-bundle**: \`api/index.js\` is now bundled with a 60-second function timeout in \`vercel.json\` to prevent cold-start timeouts.`
         : '';
 
       const errorMsg: RAGMessage = {

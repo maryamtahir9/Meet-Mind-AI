@@ -330,6 +330,17 @@ Maryam: We decided to deploy the staging release to production tomorrow at 10 AM
   ],
 };
 
+export function getDatabaseUrl(): string | null {
+  const url =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.NEON_DATABASE_URL ||
+    process.env.POSTGRESQL_URL ||
+    process.env.DATABASE_URL_UNPOOLED;
+  if (!url) return null;
+  return url.trim().replace(/^['"]|['"]$/g, '');
+}
+
 class DatabaseService {
   private store: DatabaseStore;
   private hasInitialized = false;
@@ -337,10 +348,17 @@ class DatabaseService {
 
   constructor() {
     this.store = this.loadStore();
-    if (process.env.DATABASE_URL) {
+    const dbUrl = getDatabaseUrl();
+    if (dbUrl) {
       try {
-        this.sqlClient = neon(process.env.DATABASE_URL);
-        this.initNeonSync();
+        this.sqlClient = neon(dbUrl);
+        // Run Neon initialization with timeout protection so serverless functions never hang
+        Promise.race([
+          this.initNeonSync(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Neon sync timeout')), 3500)),
+        ]).catch((err) => {
+          console.warn('[DB] Neon background sync notice (serving from memory store):', err.message || err);
+        });
       } catch (err) {
         console.warn('[DB] Neon client initialization warning:', err);
       }
@@ -348,9 +366,10 @@ class DatabaseService {
   }
 
   private async initNeonSync() {
-    if (!this.sqlClient) return;
+    if (!this.sqlClient || this.hasInitialized) return;
+    this.hasInitialized = true;
     try {
-      // 1. Create tables if they do not exist
+      // 1. Create tables with a single combined query to eliminate roundtrip latency
       await this.sqlClient`
         CREATE TABLE IF NOT EXISTS users (
           id TEXT PRIMARY KEY,
@@ -358,8 +377,6 @@ class DatabaseService {
           name TEXT,
           created_at TEXT
         );
-      `;
-      await this.sqlClient`
         CREATE TABLE IF NOT EXISTS meetings (
           id TEXT PRIMARY KEY,
           user_id TEXT,
@@ -370,8 +387,6 @@ class DatabaseService {
           created_at TEXT,
           updated_at TEXT
         );
-      `;
-      await this.sqlClient`
         CREATE TABLE IF NOT EXISTS commitments (
           id TEXT PRIMARY KEY,
           meeting_id TEXT,
@@ -385,16 +400,12 @@ class DatabaseService {
           created_at TEXT,
           updated_at TEXT
         );
-      `;
-      await this.sqlClient`
         CREATE TABLE IF NOT EXISTS decisions (
           id TEXT PRIMARY KEY,
           meeting_id TEXT,
           description TEXT,
           created_at TEXT
         );
-      `;
-      await this.sqlClient`
         CREATE TABLE IF NOT EXISTS action_items (
           id TEXT PRIMARY KEY,
           meeting_id TEXT,
@@ -405,8 +416,6 @@ class DatabaseService {
           created_at TEXT,
           updated_at TEXT
         );
-      `;
-      await this.sqlClient`
         CREATE TABLE IF NOT EXISTS unresolved_issues (
           id TEXT PRIMARY KEY,
           meeting_id TEXT,
@@ -417,8 +426,6 @@ class DatabaseService {
           created_at TEXT,
           updated_at TEXT
         );
-      `;
-      await this.sqlClient`
         CREATE TABLE IF NOT EXISTS transcript_chunks (
           id TEXT PRIMARY KEY,
           meeting_id TEXT,
@@ -448,23 +455,33 @@ class DatabaseService {
   private async hydrateFromNeon() {
     if (!this.sqlClient) return;
     try {
-      const meetings = await this.sqlClient`SELECT * FROM meetings ORDER BY meeting_date DESC`;
-      const commitments = await this.sqlClient`SELECT * FROM commitments`;
-      const decisions = await this.sqlClient`SELECT * FROM decisions`;
-      const actionItems = await this.sqlClient`SELECT * FROM action_items`;
-      const issues = await this.sqlClient`SELECT * FROM unresolved_issues`;
-      const users = await this.sqlClient`SELECT * FROM users`;
+      const [meetingsRes, commitmentsRes, decisionsRes, actionItemsRes, issuesRes, usersRes] =
+        await Promise.allSettled([
+          this.sqlClient`SELECT * FROM meetings ORDER BY meeting_date DESC`,
+          this.sqlClient`SELECT * FROM commitments`,
+          this.sqlClient`SELECT * FROM decisions`,
+          this.sqlClient`SELECT * FROM action_items`,
+          this.sqlClient`SELECT * FROM unresolved_issues`,
+          this.sqlClient`SELECT * FROM users`,
+        ]);
 
-function toIsoString(val: any, fallback?: string): string {
-  if (!val) return fallback || new Date().toISOString();
-  if (val instanceof Date) return val.toISOString();
-  if (typeof val === 'string') return val;
-  try {
-    return new Date(val).toISOString();
-  } catch {
-    return fallback || new Date().toISOString();
-  }
-}
+      const meetings = meetingsRes.status === 'fulfilled' ? meetingsRes.value : [];
+      const commitments = commitmentsRes.status === 'fulfilled' ? commitmentsRes.value : [];
+      const decisions = decisionsRes.status === 'fulfilled' ? decisionsRes.value : [];
+      const actionItems = actionItemsRes.status === 'fulfilled' ? actionItemsRes.value : [];
+      const issues = issuesRes.status === 'fulfilled' ? issuesRes.value : [];
+      const users = usersRes.status === 'fulfilled' ? usersRes.value : [];
+
+      function toIsoString(val: any, fallback?: string): string {
+        if (!val) return fallback || new Date().toISOString();
+        if (val instanceof Date) return val.toISOString();
+        if (typeof val === 'string') return val;
+        try {
+          return new Date(val).toISOString();
+        } catch {
+          return fallback || new Date().toISOString();
+        }
+      }
 
       if (meetings && meetings.length > 0) {
         this.store.meetings = meetings.map((m: any) => ({
@@ -634,15 +651,22 @@ function toIsoString(val: any, fallback?: string): string {
   }
 
   public getStatus() {
-    const hasNeonConfig = Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgres'));
+    const dbUrl = getDatabaseUrl();
+    const hasNeonConfig = Boolean(dbUrl && (dbUrl.includes('postgres') || dbUrl.includes('neon.tech')));
+    const groqKey =
+      process.env.GROQ_API_KEY ||
+      process.env.GROQ ||
+      process.env.GROQ_KEY ||
+      process.env.GROQKEY ||
+      process.env.VITE_GROQ_API_KEY;
     return {
       connectedToNeon: hasNeonConfig,
-      databaseUrlSet: Boolean(process.env.DATABASE_URL),
+      databaseUrlSet: Boolean(dbUrl),
       storageType: hasNeonConfig ? 'Neon Serverless PostgreSQL' : 'Embedded Engine',
       totalUsers: this.store.users.length,
       totalMeetings: this.store.meetings.length,
       totalCommitments: this.store.commitments.length,
-      groqConfigured: Boolean(process.env.GROQ_API_KEY),
+      groqConfigured: Boolean(groqKey && groqKey.trim().length > 0),
       geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
     };
   }

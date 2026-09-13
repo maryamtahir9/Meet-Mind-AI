@@ -48,6 +48,17 @@ export function createExpressApp() {
   app.use('/api', apiRouter);
   app.use('/', apiRouter);
 
+  // Global error handler middleware to prevent serverless function crashes
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('[Server Error]', err);
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: err.message || 'Internal Server Error',
+        code: 'INTERNAL_SERVER_ERROR',
+      });
+    }
+  });
+
   return app;
 }
 

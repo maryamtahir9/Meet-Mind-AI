@@ -3,6 +3,7 @@ import { db } from './db';
 import {
   transcribeAudio,
   extractMeetingIntelligence,
+  getGroqApiKey,
 } from './groq';
 import { runCrossMeetingAccountabilityEngine } from './crossMeetingAnalysis';
 import { chunkTranscript, answerQuestionWithRAG } from './rag';
@@ -27,9 +28,10 @@ function getAuthenticatedUserId(req: Request): string {
 
 apiRouter.get('/system/status', (req: Request, res: Response) => {
   const dbStatus = db.getStatus();
+  const groqKey = getGroqApiKey();
   res.json({
     ...dbStatus,
-    groqConfigured: Boolean(process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim().length > 0),
+    groqConfigured: Boolean(groqKey && groqKey.trim().length > 0),
     geminiConfigured: Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim().length > 0),
   });
 });
