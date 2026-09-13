@@ -369,72 +369,16 @@ class DatabaseService {
     if (!this.sqlClient || this.hasInitialized) return;
     this.hasInitialized = true;
     try {
-      // 1. Create tables with a single combined query to eliminate roundtrip latency
-      await this.sqlClient`
-        CREATE TABLE IF NOT EXISTS users (
-          id TEXT PRIMARY KEY,
-          email TEXT,
-          name TEXT,
-          created_at TEXT
-        );
-        CREATE TABLE IF NOT EXISTS meetings (
-          id TEXT PRIMARY KEY,
-          user_id TEXT,
-          title TEXT,
-          meeting_date TEXT,
-          transcript_text TEXT,
-          summary TEXT,
-          created_at TEXT,
-          updated_at TEXT
-        );
-        CREATE TABLE IF NOT EXISTS commitments (
-          id TEXT PRIMARY KEY,
-          meeting_id TEXT,
-          person TEXT,
-          description TEXT,
-          deadline TEXT,
-          status TEXT,
-          last_mentioned_meeting_id TEXT,
-          confidence REAL,
-          status_history JSONB,
-          created_at TEXT,
-          updated_at TEXT
-        );
-        CREATE TABLE IF NOT EXISTS decisions (
-          id TEXT PRIMARY KEY,
-          meeting_id TEXT,
-          description TEXT,
-          created_at TEXT
-        );
-        CREATE TABLE IF NOT EXISTS action_items (
-          id TEXT PRIMARY KEY,
-          meeting_id TEXT,
-          person TEXT,
-          description TEXT,
-          deadline TEXT,
-          status TEXT,
-          created_at TEXT,
-          updated_at TEXT
-        );
-        CREATE TABLE IF NOT EXISTS unresolved_issues (
-          id TEXT PRIMARY KEY,
-          meeting_id TEXT,
-          description TEXT,
-          times_repeated INT,
-          status TEXT,
-          related_meeting_ids JSONB,
-          created_at TEXT,
-          updated_at TEXT
-        );
-        CREATE TABLE IF NOT EXISTS transcript_chunks (
-          id TEXT PRIMARY KEY,
-          meeting_id TEXT,
-          meeting_title TEXT,
-          chunk_index INT,
-          chunk_text TEXT,
-          created_at TEXT
-        );
-      `;
+      // 1. Create tables individually in parallel (Neon does not allow multiple commands in a single prepared statement)
+      await Promise.allSettled([
+        this.sqlClient`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT, name TEXT, created_at TEXT)`,
+        this.sqlClient`CREATE TABLE IF NOT EXISTS meetings (id TEXT PRIMARY KEY, user_id TEXT, title TEXT, meeting_date TEXT, transcript_text TEXT, summary TEXT, created_at TEXT, updated_at TEXT)`,
+        this.sqlClient`CREATE TABLE IF NOT EXISTS commitments (id TEXT PRIMARY KEY, meeting_id TEXT, person TEXT, description TEXT, deadline TEXT, status TEXT, last_mentioned_meeting_id TEXT, confidence REAL, status_history JSONB, created_at TEXT, updated_at TEXT)`,
+        this.sqlClient`CREATE TABLE IF NOT EXISTS decisions (id TEXT PRIMARY KEY, meeting_id TEXT, description TEXT, created_at TEXT)`,
+        this.sqlClient`CREATE TABLE IF NOT EXISTS action_items (id TEXT PRIMARY KEY, meeting_id TEXT, person TEXT, description TEXT, deadline TEXT, status TEXT, created_at TEXT, updated_at TEXT)`,
+        this.sqlClient`CREATE TABLE IF NOT EXISTS unresolved_issues (id TEXT PRIMARY KEY, meeting_id TEXT, description TEXT, times_repeated INT, status TEXT, related_meeting_ids JSONB, created_at TEXT, updated_at TEXT)`,
+        this.sqlClient`CREATE TABLE IF NOT EXISTS transcript_chunks (id TEXT PRIMARY KEY, meeting_id TEXT, meeting_title TEXT, chunk_index INT, chunk_text TEXT, created_at TEXT)`,
+      ]);
 
       // 2. Check if database has records
       const existing = await this.sqlClient`SELECT count(*) as count FROM meetings`;
